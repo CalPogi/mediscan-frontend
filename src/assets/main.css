@@ -1,0 +1,28 @@
+/* src/assets/base.css */
+:root {
+  --navy-primary: #1e3a8a; /* Deep Navy */
+  --navy-hover: #172554; /* Darker Navy for hover */
+  --blue-light: #eff6ff; /* Very faint blue background */
+  --blue-accent: #3b82f6; /* Bright blue for focus/icons */
+  --white: #ffffff;
+  --text-main: #0f172a; /* Dark text */
+  --text-sub: #64748b; /* Gray text */
+  --danger: #ef4444; /* Red for errors */
+  --success: #10b981; /* Green for success */
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--blue-light);
+  color: var(--text-main);
+}
+
+/* Reset standard elements */
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}

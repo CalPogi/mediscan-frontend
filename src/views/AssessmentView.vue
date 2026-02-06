@@ -14,8 +14,7 @@
 
         <AppFormGroup label="Symptoms">
           <div class="checkbox-list">
-            <label v-for="sym in ['Headache', 'Fever', 'Cough', 'Colds', 'Stomach Pain', 'Dizziness']" :key="sym"
-              class="checkbox-item">
+            <label v-for="sym in availableSymptoms" :key="sym" class="checkbox-item">
               <input type="checkbox" :value="sym" v-model="symptoms">
               <span>{{ sym }}</span>
             </label>
@@ -87,10 +86,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../services/api';
-// Import your new components
 import AppBackground from '../components/AppBackground.vue';
 import AppCard from '../components/AppCard.vue';
 import AppButton from '../components/AppButton.vue';
@@ -101,8 +99,9 @@ const route = useRoute();
 const router = useRouter();
 const lrn = ref(route.params.lrn as string);
 
-
 const studentName = ref('');
+const studentSex = ref('');
+
 const symptoms = ref<string[]>([]);
 const painLevel = ref(0);
 const sleepHours = ref<number | null>(null);
@@ -114,11 +113,22 @@ const isLoading = ref(false);
 const isDispensing = ref(false);
 const error = ref('');
 
+const availableSymptoms = computed(() => {
+  const baseSymptoms = ['Headache', 'Fever', 'Cough', 'Colds', 'Stomach Pain', 'Dizziness'];
+
+  if (studentSex.value === 'Female') {
+    baseSymptoms.push('Menstrual Cramps');
+  }
+
+  return baseSymptoms;
+});
+
 onMounted(async () => {
   try {
     const response = await api.get(`/check-lrn/${lrn.value}`);
     if (response.data.status === 'found') {
       studentName.value = response.data.student.name;
+      studentSex.value = response.data.student.sex;
     }
   } catch (err) {
     console.error("Could not fetch student details");
@@ -138,7 +148,8 @@ const submitAssessment = async () => {
       pain_level: painLevel.value,
       sleep_hours: sleepHours.value,
       water_intake: waterIntake.value,
-      last_meal: lastMeal.value
+      last_meal: lastMeal.value,
+      sex: studentSex.value
     };
 
     const response = await api.post('/assess', payload);
@@ -181,13 +192,11 @@ const dispenseMedicine = async () => {
 </script>
 
 <style scoped>
-/* Glass Card specific override */
 :deep(.glass-card) {
   background-color: rgba(255, 255, 255, 0.95) !important;
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   max-width: 500px;
-  /* Make assessment card slightly wider */
 }
 
 .header {
@@ -217,7 +226,6 @@ const dispenseMedicine = async () => {
   color: var(--text-sub);
 }
 
-/* Checkboxes */
 .checkbox-list {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -243,7 +251,6 @@ const dispenseMedicine = async () => {
   accent-color: var(--navy-primary);
 }
 
-/* Pain Scale */
 .pain-scale {
   display: flex;
   gap: 8px;
@@ -268,13 +275,11 @@ const dispenseMedicine = async () => {
   transform: scale(1.05);
 }
 
-/* Grid Layout for Sleep/Water */
 .grid-row {
   display: flex;
   gap: 15px;
 }
 
-/* Select styling (matches AppInput) */
 .app-select {
   width: 100%;
   padding: 14px;
@@ -292,7 +297,6 @@ const dispenseMedicine = async () => {
   border-color: var(--navy-primary);
 }
 
-/* Result Box */
 .rec-label {
   color: var(--text-sub);
   font-size: 0.9rem;

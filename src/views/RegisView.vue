@@ -14,6 +14,14 @@
           <AppInput v-model="form.name" placeholder="Juan Dela Cruz" required />
         </AppFormGroup>
 
+        <AppFormGroup label="Sex">
+          <select v-model="form.sex" class="app-select" required>
+            <option disabled value="">Select Sex</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </AppFormGroup>
+
         <AppFormGroup label="Grade Level">
           <select v-model="selectedGradeId" @change="filterSections" class="app-select" required>
             <option disabled value="">Select Grade</option>
@@ -73,6 +81,7 @@ const error = ref('');
 const form = ref({
   lrn: (route.params.lrn as string) || '',
   name: '',
+  sex: '',
   section_id: '',
   guardian_name: '',
   guardian_contact: '+63'
@@ -105,7 +114,6 @@ const registerStudent = async () => {
   }
 };
 </script>
-
 
 <style scoped>
 :deep(.glass-card) {

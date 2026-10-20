@@ -72,8 +72,9 @@ import AppFormGroup from '../components/AppFormGroup.vue';
 const route = useRoute();
 const router = useRouter();
 
-const schoolData = ref<any[]>([]);
-const filteredSections = ref<any[]>([]);
+type Grade = { id: number; name: string; sections: { id: number; name: string }[] };
+const schoolData = ref<Grade[]>([]);
+const filteredSections = ref<Grade["sections"]>([]);
 const selectedGradeId = ref('');
 const isSubmitting = ref(false);
 const error = ref('');
@@ -89,13 +90,14 @@ const form = ref({
 
 onMounted(async () => {
   try {
-    const response = await api.get('/school-data');
-    schoolData.value = response.data;
-  } catch (err) { error.value = "Failed to load school data."; }
+    const { data, error: dbError } = await api.from('grade_levels').select('id, name, sections(id, name)').order('id');
+    if (dbError) throw dbError;
+    schoolData.value = data;
+  } catch { error.value = "Failed to load school data."; }
 });
 
 const filterSections = () => {
-  const grade = schoolData.value.find(g => g.id === selectedGradeId.value);
+  const grade = schoolData.value.find(g => g.id === Number(selectedGradeId.value));
   filteredSections.value = grade ? grade.sections : [];
   form.value.section_id = '';
 };
@@ -104,11 +106,19 @@ const registerStudent = async () => {
   isSubmitting.value = true;
   error.value = '';
   try {
-    await api.post('/register', form.value);
+    const { error: rpcError } = await api.rpc('register_student', {
+      p_lrn: form.value.lrn,
+      p_name: form.value.name,
+      p_sex: form.value.sex,
+      p_section_id: Number(form.value.section_id),
+      p_guardian_name: form.value.guardian_name,
+      p_guardian_contact: form.value.guardian_contact
+    });
+    if (rpcError) throw rpcError;
     alert("Registration Successful!");
     router.push({ name: 'assessment', params: { lrn: form.value.lrn } });
-  } catch (err: any) {
-    error.value = err.response?.data?.message || "Registration failed.";
+  } catch (err) {
+    error.value = (err as Error).message || "Registration failed.";
   } finally {
     isSubmitting.value = false;
   }

@@ -17,7 +17,7 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
-    "axios": "^1.13.4",
+    "@supabase/supabase-js": "^2.118.0",
     "pinia": "^3.0.4",
     "vue": "^3.5.27",
     "vue-router": "^4.6.4"
@@ -42,6 +42,7 @@
     "npm-run-all2": "^8.0.4",
     "oxlint": "~1.42.0",
     "prettier": "3.8.1",
+    "supabase": "^2.121.0",
     "typescript": "~5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-vue-devtools": "^8.0.5",

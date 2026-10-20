@@ -108,7 +108,7 @@ const sleepHours = ref<number | null>(null);
 const waterIntake = ref<number | null>(null);
 const lastMeal = ref('');
 
-const recommendation = ref<{ name: string; dosage: string; med_id: number; advice?: string } | null>(null);
+const recommendation = ref<{ name: string; dosage: string; advice?: string } | null>(null);
 const isLoading = ref(false);
 const isDispensing = ref(false);
 const error = ref('');
@@ -125,12 +125,14 @@ const availableSymptoms = computed(() => {
 
 onMounted(async () => {
   try {
-    const response = await api.get(`/check-lrn/${lrn.value}`);
-    if (response.data.status === 'found') {
-      studentName.value = response.data.student.name;
-      studentSex.value = response.data.student.sex;
+    const { data, error: rpcError } = await api.rpc('check_lrn', { p_lrn: lrn.value });
+    if (rpcError) throw rpcError;
+    const student = data as { found: boolean; name: string; sex: string };
+    if (student.found) {
+      studentName.value = student.name;
+      studentSex.value = student.sex;
     }
-  } catch (err) {
+  } catch {
     console.error("Could not fetch student details");
   }
 });
@@ -143,26 +145,21 @@ const submitAssessment = async () => {
   recommendation.value = null;
 
   try {
-    const payload = {
-      symptoms: symptoms.value,
-      pain_level: painLevel.value,
-      sleep_hours: sleepHours.value,
-      water_intake: waterIntake.value,
-      last_meal: lastMeal.value,
-      sex: studentSex.value
-    };
-
-    const response = await api.post('/assess', payload);
+    const { data, error: rpcError } = await api.rpc('assess', {
+      p_symptoms: symptoms.value,
+      p_pain_level: painLevel.value
+    });
+    if (rpcError) throw rpcError;
+    const res = data as { recommendation: string; dosage: string; advice?: string };
 
     recommendation.value = {
-      name: response.data.recommendation,
-      dosage: response.data.dosage,
-      med_id: response.data.med_id,
-      advice: response.data.advice
+      name: res.recommendation,
+      dosage: res.dosage,
+      advice: res.advice
     };
 
-  } catch (err: any) {
-    error.value = err.response?.data?.error || "Assessment failed. Please try again.";
+  } catch (err) {
+    error.value = (err as Error).message || "Assessment failed. Please try again.";
   } finally {
     isLoading.value = false;
   }
@@ -173,17 +170,16 @@ const dispenseMedicine = async () => {
   isDispensing.value = true;
 
   try {
-    await api.post('/dispense', {
-      lrn: lrn.value,
-      med_id: recommendation.value.med_id,
-      symptoms: symptoms.value,
-      pain_level: painLevel.value,
-      sleep_hours: sleepHours.value
+    const { error: rpcError } = await api.rpc('request_dispense', {
+      p_lrn: lrn.value,
+      p_symptoms: symptoms.value,
+      p_pain_level: painLevel.value
     });
+    if (rpcError) throw rpcError;
 
     alert(`Success! Dispensing ${recommendation.value.name}.`);
     router.push('/');
-  } catch (err) {
+  } catch {
     alert("Hardware timeout.");
   } finally {
     isDispensing.value = false;

@@ -1,11 +1,7 @@
-import axios from 'axios'
+import { createClient } from '@supabase/supabase-js'
+import type { Database } from '../types/database.gen'
 
-const api = axios.create({
-  baseURL: 'https://mediscan-backend-a9lx.onrender.com/api',
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-})
-
-export default api
+export default createClient<Database>(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+)

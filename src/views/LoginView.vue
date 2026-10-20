@@ -34,7 +34,6 @@ import AppBackground from '../components/AppBackground.vue';
 import AppCard from '../components/AppCard.vue';
 import AppButton from '../components/AppButton.vue';
 import AppInput from '../components/AppInput.vue';
-import AppFormGroup from '../components/AppFormGroup.vue';
 
 const router = useRouter();
 const lrn = ref('');
@@ -49,20 +48,16 @@ const checkLRN = async () => {
   showRegisterOption.value = false;
 
   try {
-    const response = await api.get(`/check-lrn/${lrn.value}`);
-    if (response.data.action === 'go_to_symptoms') {
+    const { data, error: rpcError } = await api.rpc('check_lrn', { p_lrn: lrn.value });
+    if (rpcError) throw rpcError;
+    if ((data as { found: boolean }).found) {
       router.push({ name: 'assessment', params: { lrn: lrn.value } });
     } else {
       error.value = `LRN ${lrn.value} is not registered.`;
       showRegisterOption.value = true;
     }
-  } catch (err: any) {
-    if (err.response?.status === 404) {
-      error.value = `Student with LRN ${lrn.value} not found.`;
-      showRegisterOption.value = true;
-    } else {
-      error.value = "Connection Error. Please try again.";
-    }
+  } catch {
+    error.value = "Connection Error. Please try again.";
   } finally {
     loading.value = false;
   }
